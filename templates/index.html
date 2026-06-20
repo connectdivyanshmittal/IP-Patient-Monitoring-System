@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IP Based Patient Monitoring System</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f6f9;
+            margin:20px;
+        }
+
+        h1{
+            text-align:center;
+            color:#333;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            margin-bottom:20px;
+            border-radius:10px;
+            box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        canvas{
+            width:100% !important;
+            height:300px !important;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+        }
+
+        th{
+            background:#007bff;
+            color:white;
+        }
+
+        th,td{
+            border:1px solid #ddd;
+            padding:10px;
+            text-align:center;
+        }
+
+        tr:nth-child(even){
+            background:#f2f2f2;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>🏥 IP Based Patient Monitoring System</h1>
+
+<div class="card">
+    <h2>❤️ Heart Rate Monitor</h2>
+    <canvas id="hrChart"></canvas>
+</div>
+
+<div class="card">
+    <h2>🫁 SpO₂ Monitor</h2>
+    <canvas id="spo2Chart"></canvas>
+</div>
+
+<div class="card">
+    <h2>🌡️ Temperature Monitor</h2>
+    <canvas id="tempChart"></canvas>
+</div>
+
+<div class="card">
+
+<h2>📋 Live Patient Records</h2>
+
+<table>
+
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Patient</th>
+    <th>Heart Rate</th>
+    <th>SpO₂</th>
+    <th>Temperature</th>
+    <th>Timestamp</th>
+</tr>
+</thead>
+
+<tbody id="tableBody">
+</tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const hrCtx = document.getElementById('hrChart');
+const spo2Ctx = document.getElementById('spo2Chart');
+const tempCtx = document.getElementById('tempChart');
+
+const hrChart = new Chart(hrCtx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Heart Rate (bpm)',
+            data: [],
+            borderWidth: 3
+        }]
+    }
+});
+
+const spo2Chart = new Chart(spo2Ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'SpO₂ (%)',
+            data: [],
+            borderWidth: 3
+        }]
+    }
+});
+
+const tempChart = new Chart(tempCtx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Temperature (°C)',
+            data: [],
+            borderWidth: 3
+        }]
+    }
+});
+
+async function loadData(){
+
+    const response = await fetch('/api/data');
+
+    const data = await response.json();
+
+    let labels = [];
+    let hr = [];
+    let spo2 = [];
+    let temp = [];
+
+    data.reverse();
+
+    data.forEach(row => {
+
+        labels.push(row.id);
+        hr.push(row.hr);
+        spo2.push(row.spo2);
+        temp.push(row.temp);
+
+    });
+
+    hrChart.data.labels = labels;
+    hrChart.data.datasets[0].data = hr;
+    hrChart.update();
+
+    spo2Chart.data.labels = labels;
+    spo2Chart.data.datasets[0].data = spo2;
+    spo2Chart.update();
+
+    tempChart.data.labels = labels;
+    tempChart.data.datasets[0].data = temp;
+    tempChart.update();
+
+    let html = "";
+
+    data.reverse().forEach(row => {
+
+        html += `
+        <tr>
+            <td>${row.id}</td>
+            <td>${row.patient}</td>
+            <td>${row.hr}</td>
+            <td>${row.spo2}</td>
+            <td>${row.temp}</td>
+            <td>${row.time}</td>
+        </tr>
+        `;
+
+    });
+
+    document.getElementById("tableBody").innerHTML = html;
+}
+
+loadData();
+
+setInterval(loadData,2000);
+
+</script>
+
+</body>
+</html>
